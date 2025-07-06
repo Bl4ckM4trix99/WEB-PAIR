@@ -1,43 +1,26 @@
-const mega = require("megajs");
-const auth = {
-  email: "elonmasmellow99@gmail.com",
-  password: "Chandra@32",
-  userAgent:
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
-};
+// mega.js – Keyword Detection + Media Sending
 
-const upload = (data, name) => {
-  return new Promise((resolve, reject) => {
-    const storage = new mega.Storage(auth);
+function keywordAction(message) {
+  if (message.includes("order")) {
+    return "🛒 Placing order. Let me help you.";
+  } else if (message.includes("refund")) {
+    return "🔁 Refund process started.";
+  } else {
+    return "❓ Not sure what you mean.";
+  }
+}
 
-    // Wait for storage to be ready
-    storage.on("ready", () => {
-      console.log("Storage is ready. Proceeding with upload.");
+function sendMedia(type) {
+  const mediaLinks = {
+    image: "https://example.com/image.jpg",
+    pdf: "https://example.com/file.pdf",
+    video: "https://example.com/video.mp4",
+  };
 
-      const uploadStream = storage.upload({ name, allowUploadBuffering: true });
+  return mediaLinks[type] || "❌ Invalid media type.";
+}
 
-      uploadStream.on("complete", (file) => {
-        file.link((err, url) => {
-          if (err) {
-            reject(err);
-          } else {
-            storage.close();
-            resolve(url);
-          }
-        });
-      });
+// Sample test
+console.log(keywordAction("I want a refund"));
+console.log(sendMedia("pdf"));
 
-      uploadStream.on("error", (err) => {
-        reject(err);
-      });
-
-      data.pipe(uploadStream);
-    });
-
-    storage.on("error", (err) => {
-      reject(err);
-    });
-  });
-};
-
-module.exports = { upload };
