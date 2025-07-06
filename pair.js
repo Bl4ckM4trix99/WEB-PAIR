@@ -1,133 +1,41 @@
-const express = require("express");
-const fs = require("fs");
-const { exec } = require("child_process");
-let router = express.Router();
-const pino = require("pino");
-const {
-  default: makeWASocket,
-  useMultiFileAuthState,
-  delay,
-  makeCacheableSignalKeyStore,
-  Browsers,
-  jidNormalizedUser,
-} = require("@whiskeysockets/baileys");
-const { upload } = require("./mega");
+// pair.js – OTP, Payment, Webhook, CRM, Reminder, Multi-language
 
-function removeFile(FilePath) {
-  if (!fs.existsSync(FilePath)) return false;
-  fs.rmSync(FilePath, { recursive: true, force: true });
+function sendOTP(phoneNumber) {
+  const otp = Math.floor(100000 + Math.random() * 900000);
+  return `✅ OTP sent to ${phoneNumber}: ${otp}`;
 }
 
-router.get("/", async (req, res) => {
-  let num = req.query.number;
-  async function RobinPair() {
-    const { state, saveCreds } = await useMultiFileAuthState(`./session`);
-    try {
-      let RobinPairWeb = makeWASocket({
-        auth: {
-          creds: state.creds,
-          keys: makeCacheableSignalKeyStore(
-            state.keys,
-            pino({ level: "fatal" }).child({ level: "fatal" })
-          ),
-        },
-        printQRInTerminal: false,
-        logger: pino({ level: "fatal" }).child({ level: "fatal" }),
-        browser: Browsers.macOS("Safari"),
-      });
+function initiatePayment(amount) {
+  return `💳 Pay ${amount} at: https://payment-gateway.com/checkout`;
+}
 
-      if (!RobinPairWeb.authState.creds.registered) {
-        await delay(1500);
-        num = num.replace(/[^0-9]/g, "");
-        const code = await RobinPairWeb.requestPairingCode(num);
-        if (!res.headersSent) {
-          await res.send({ code });
-        }
-      }
+function sendWebhook(data) {
+  fetch("https://yourserver.com/webhook", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
 
-      RobinPairWeb.ev.on("creds.update", saveCreds);
-      RobinPairWeb.ev.on("connection.update", async (s) => {
-        const { connection, lastDisconnect } = s;
-        if (connection === "open") {
-          try {
-            await delay(10000);
-            const sessionPrabath = fs.readFileSync("./session/creds.json");
+function saveToCRM(user, message) {
+  const crmData = { user, message, timestamp: new Date() };
+  console.log("Saved to CRM:", crmData);
+}
 
-            const auth_path = "./session/";
-            const user_jid = jidNormalizedUser(RobinPairWeb.user.id);
+function setReminder(user, time, task) {
+  return `⏰ Reminder set for ${user} at ${time} to ${task}`;
+}
 
-            function randomMegaId(length = 6, numberLength = 4) {
-              const characters =
-                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-              let result = "";
-              for (let i = 0; i < length; i++) {
-                result += characters.charAt(
-                  Math.floor(Math.random() * characters.length)
-                );
-              }
-              const number = Math.floor(
-                Math.random() * Math.pow(10, numberLength)
-              );
-              return `${result}${number}`;
-            }
+function translate(message, lang = "en") {
+  const translations = {
+    "hello": { en: "Hello", si: "හෙලෝ" },
+    "thanks": { en: "Thank you", si: "ස්තුතියි" },
+  };
+  return translations[message]?.[lang] || message;
+}
 
-            const mega_url = await upload(
-              fs.createReadStream(auth_path + "creds.json"),
-              `${randomMegaId()}.json`
-            );
-
-            const string_session = mega_url.replace(
-              "https://mega.nz/file/",
-              ""
-            );
-
-           const sid = `*SHENAL [The powerful WA BOT]*\n\n👉 ${string_session} 👈\n\n*This is your Session ID, copy this ID and paste it into the config.js file*\n\n*If you have any questions, feel free to contact me using this link:*\n\n*wa.me/message/WKGLBR2PCETWD1*\n\n*Join our cybersecurity WhatsApp group:*\n\n*https://chat.whatsapp.com/GAOhr0qNK7KEvJwbenGivZ*`;
-
-const mg = `🛑 *Never share this code with anyone – protect your session ID* 🛑`;
-
-const dt = await RobinPairWeb.sendMessage(user_jid, {
-  image: {
-   url: "https://raw.githubusercontent.com/Dark-Robin/Bot-Helper/refs/heads/main/autoimage/hacker-style-image.jpg", // replace with your own hacker-themed image URL
-  },
-  caption: sid,
-});
-            const msg = await RobinPairWeb.sendMessage(user_jid, {
-              text: string_session,
-            });
-            const msg1 = await RobinPairWeb.sendMessage(user_jid, { text: mg });
-          } catch (e) {
-            exec("pm2 restart prabath");
-          }
-
-          await delay(100);
-          return await removeFile("./session");
-          process.exit(0);
-        } else if (
-          connection === "close" &&
-          lastDisconnect &&
-          lastDisconnect.error &&
-          lastDisconnect.error.output.statusCode !== 401
-        ) {
-          await delay(10000);
-          RobinPair();
-        }
-      });
-    } catch (err) {
-      exec("pm2 restart Robin-md");
-      console.log("service restarted");
-      RobinPair();
-      await removeFile("./session");
-      if (!res.headersSent) {
-        await res.send({ code: "Service Unavailable" });
-      }
-    }
-  }
-  return await RobinPair();
-});
-
-process.on("uncaughtException", function (err) {
-  console.log("Caught exception: " + err);
-  exec("pm2 restart Robin");
-});
-
-module.exports = router;
+// Sample test
+console.log(sendOTP("+94771234567"));
+console.log(initiatePayment("1000 LKR"));
+console.log(setReminder("User1", "5pm", "Send Report"));
+console.log(translate("thanks", "si"));
