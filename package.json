@@ -1,13 +1,13 @@
 {
-  "name": "Shenal-web-pair",
-  "version": "1.0.0",
-  "description": "A multi-functional WhatsApp bot Web PairCode by Shenal.",
-  "main": "index.js",
-  "scripts": {
-    "start": "pm2 start index.js --deep-monitoring --attach --name Shenal",
-    "stop": "pm2 stop Shenal",
-    "restart": "pm2 restart Shenal"
-  },
+"name": "Robin-web-pair",
+    "version": "0.0.1",
+    "description": "A multi functional whatsapp bot Web paircode.",
+    "main": "index.js",
+    "scripts": {
+      "start": "pm2 start index.js --deep-monitoring --attach --name Robin",
+      "stop": "pm2 stop robin",
+     "restart": "pm2 restart robin"
+    },
   "dependencies": {
     "@whiskeysockets/baileys": "^6.8.0",
     "qrcode": "^1.5.5",
